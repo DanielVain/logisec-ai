@@ -98,3 +98,55 @@ export const handleChat = async (
         next(error);
     }
 };
+
+// Add these exports to the bottom of server/src/controllers/aiController.ts
+
+export const getSessions = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+
+        // Fetch all sessions for this user, sorted by the most recently updated
+        const sessions = await ChatSession.find({ userId })
+            .select("title updatedAt createdAt")
+            .sort({ updatedAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            sessions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getSessionMessages = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+): Promise<void> => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user?.id;
+
+        const session = await ChatSession.findOne({ _id: sessionId, userId });
+
+        if (!session) {
+            res.status(404).json({
+                success: false,
+                error: "Security assessment session not found.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            messages: session.messages,
+        });
+    } catch (error) {
+        next(error);
+    }
+};

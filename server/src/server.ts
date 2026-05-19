@@ -2,7 +2,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js"; // <-- Add Import
+import authRoutes from "./routes/authRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js"; // <-- Import the AI Router
 
 dotenv.config();
 
@@ -19,8 +20,9 @@ app.use(express.json());
 
 connectDB();
 
-// Mounting Auth API Routes
-app.use("/api/auth", authRoutes); // <-- Add Route Group
+// Mounting Router Systems
+app.use("/api/auth", authRoutes);
+app.use("/api/ai", aiRoutes); // <-- Mount the secure path group
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(`[Server Exception] ${err.stack}`);
