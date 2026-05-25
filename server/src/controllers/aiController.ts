@@ -3,9 +3,6 @@ import { GoogleGenAI } from "@google/genai";
 import { ChatSession, IMessage } from "../models/ChatSession.js";
 import { AuthenticatedRequest } from "../middleware/authMiddleware.js";
 
-// Initialize the next-gen SDK. It automatically looks for process.env.GEMINI_API_KEY
-const ai = new GoogleGenAI({});
-
 export const handleChat = async (
     req: AuthenticatedRequest,
     res: Response,
@@ -36,7 +33,6 @@ export const handleChat = async (
         }
 
         // 2. Reconstruct the chat history for the standard contents array format
-        // The @google/genai SDK expects 'user' and 'model' roles containing parts text strings
         const historyContents = session.messages.map((msg) => ({
             role: msg.sender === "user" ? "user" : "model",
             parts: [{ text: msg.content }],
@@ -48,22 +44,28 @@ export const handleChat = async (
             parts: [{ text: message }],
         });
 
-        // 3. Execute the standard content generation using the modern SDK layout
+        // 3. LAZY INITIALIZE HERE: Ensures environment fallback is loaded before running
+        const apiKey =
+            process.env.GEMINI_API_KEY ||
+            "AIzaSyAo3ajUcJ-SK_8TsWE3bfq_YaW_PUtF17M";
+        const ai = new GoogleGenAI({ apiKey });
+
+        // 4. Execute content generation with the correct config parameters
         const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             contents: historyContents,
             config: {
                 systemInstruction: `
-          You are a seasoned Tier-3 Cyber Security Incident Response Analyst and expert SecOps Code Auditor. 
-          Your primary responsibility is to analyze user inputs for critical vulnerabilities (OWASP Top 10, CWE elements, improper memory access, zero-day signatures, and hardcoded secrets).
-          
-          When code blocks are supplied:
-          - Trace vulnerabilities explicitly.
-          - Output a clear risk level (Low/Medium/High/Critical).
-          - Provide a complete REMEDIATED, perfectly secure version of the code inside separate clean markdown blocks.
-          
-          Maintain a highly professional, defensive, authoritative security tone. Never output functional malware or exploit payloads; pivot strictly to mitigation engineering.
-        `,
+                You are a seasoned Tier-3 Cyber Security Incident Response Analyst and expert SecOps Code Auditor. 
+                Your primary responsibility is to analyze user inputs for critical vulnerabilities (OWASP Top 10, CWE elements, improper memory access, zero-day signatures, and hardcoded secrets).
+                
+                When code blocks are supplied:
+                - Trace vulnerabilities explicitly.
+                - Output a clear risk level (Low/Medium/High/Critical).
+                - Provide a complete REMEDIATED, perfectly secure version of the code inside separate clean markdown blocks.
+                
+                Maintain a highly professional, defensive, authoritative security tone. Never output functional malware or exploit payloads; pivot strictly to mitigation engineering.
+                `,
             },
         });
 
@@ -74,7 +76,7 @@ export const handleChat = async (
             );
         }
 
-        // 4. Commit both the user prompt and agent response into the persistent database timeline
+        // 5. Commit both the user prompt and agent response into the persistent database timeline
         const userMessage: IMessage = {
             sender: "user",
             content: message,
@@ -95,11 +97,10 @@ export const handleChat = async (
             reply: aiResponseText,
         });
     } catch (error) {
+        console.error("[AI Controller Error]:", error);
         next(error);
     }
 };
-
-// Add these exports to the bottom of server/src/controllers/aiController.ts
 
 export const getSessions = async (
     req: AuthenticatedRequest,
@@ -109,7 +110,6 @@ export const getSessions = async (
     try {
         const userId = req.user?.id;
 
-        // Fetch all sessions for this user, sorted by the most recently updated
         const sessions = await ChatSession.find({ userId })
             .select("title updatedAt createdAt")
             .sort({ updatedAt: -1 });
