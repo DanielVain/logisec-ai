@@ -14,4 +14,3 @@ LogiSec AI is a modern, enterprise-grade full-stack security application designe
 - **Backend Infrastructure:** Node.js, Express, TypeScript (ESM)
 - **AI Processing Core:** Modern `@google/genai` SDK Core Engine
 - **Persistence Layer:** MongoDB Atlas (Mongoose ODM)
-- **Version Control & Workflow:** Strict Git Feature-Branch Strategy
