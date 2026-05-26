@@ -20,7 +20,6 @@ export const handleChat = async (
             return;
         }
 
-        // 1. Fetch or initialize the specific Chat Session in MongoDB
         let session = sessionId
             ? await ChatSession.findOne({ _id: sessionId, userId })
             : null;
@@ -32,25 +31,19 @@ export const handleChat = async (
             });
         }
 
-        // 2. Reconstruct the chat history for the standard contents array format
         const historyContents = session.messages.map((msg) => ({
             role: msg.sender === "user" ? "user" : "model",
             parts: [{ text: msg.content }],
         }));
 
-        // Append the current fresh incoming user message to the historical chain
         historyContents.push({
             role: "user",
             parts: [{ text: message }],
         });
 
-        // 3. LAZY INITIALIZE HERE: Ensures environment fallback is loaded before running
-        const apiKey =
-            process.env.GEMINI_API_KEY ||
-            "AIzaSyAo3ajUcJ-SK_8TsWE3bfq_YaW_PUtF17M";
+        const apiKey = process.env.GEMINI_API_KEY;
         const ai = new GoogleGenAI({ apiKey });
 
-        // 4. Execute content generation with the correct config parameters
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: historyContents,
@@ -76,7 +69,6 @@ export const handleChat = async (
             );
         }
 
-        // 5. Commit both the user prompt and agent response into the persistent database timeline
         const userMessage: IMessage = {
             sender: "user",
             content: message,

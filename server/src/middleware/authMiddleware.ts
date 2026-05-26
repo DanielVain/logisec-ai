@@ -37,7 +37,6 @@ export const protect = async (
 
         const decoded = jwt.verify(token, secret) as JwtPayload;
 
-        // Attach user information to request stream
         req.user = { id: decoded.id };
         next();
     } catch (error) {

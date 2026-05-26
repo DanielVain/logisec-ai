@@ -15,7 +15,11 @@ export interface IChatSession extends Document {
 }
 
 const ChatSessionSchema = new Schema<IChatSession>({
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    userId: {
+        type: Schema.Types.ObjectId,
+        required: false,
+        default: null,
+    },
     title: { type: String, default: "New Security Assessment" },
     messages: [
         {

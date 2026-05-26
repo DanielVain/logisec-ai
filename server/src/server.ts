@@ -1,60 +1,134 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import express, { Application, Request, Response, NextFunction } from "express";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Initialize environment variables immediately before // Try loading from the server folder first
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
-// If that failed, look one folder higher in the main project root
-if (!process.env.MONGO_URI) {
-    dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-}
-
-// DEBUG LINE - Let's see if either path worked
-console.log(
-    "[DEBUG] Final Check -> Mongo:",
-    !!process.env.MONGO_URI,
-    "| Gemini:",
-    !!process.env.GEMINI_API_KEY,
-);
-// Local system imports happen AFTER dotenv configures process.env
+import path from "path";
+import { fileURLToPath } from "url";
+import { GoogleGenAI } from "@google/genai";
+import { ChatSession } from "./models/ChatSession.js";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 
-const app: Application = express();
-const PORT = process.env.PORT || 5001;
+dotenv.config();
 
-app.use(
-    cors({
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
-        credentials: true,
-    }),
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+if (!process.env.MONGO_URI) {
+    process.env.PORT = "5001";
+    process.env.MONGO_URI =
+        "mongodb+srv://danielvain16_db_user:4dFFUX9lzoCNk9Pi@ai-code-reviewer-capsto.cl92guz.mongodb.net/";
+    process.env.GEMINI_API_KEY = "AIzaSyAo3ajUcJ-SK_8TsWE3bfq_YaW_PUtF17M";
+}
+
+const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: ["http://localhost:5173", "http://localhost:3000"],
+        methods: ["GET", "POST"],
+    },
+});
+
+app.use(cors());
 app.use(express.json());
 
 connectDB();
 
-// Mounting Router Systems
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(`[Server Exception] ${err.stack}`);
-    res.status(500).json({
-        success: false,
-        error:
-            process.env.NODE_ENV === "production"
-                ? "Internal Server Error"
-                : err.message,
+io.on("connection", (socket) => {
+    console.log(`[WebSocket] Secure socket line opened: ${socket.id}`);
+
+    socket.on("send_message", async (data) => {
+        try {
+            const { message, sessionId, userId } = data;
+
+            if (!message) {
+                socket.emit("error", {
+                    message: "Empty message string input.",
+                });
+                return;
+            }
+
+            let session = null;
+
+            if (userId || sessionId) {
+                session = sessionId
+                    ? await ChatSession.findById(sessionId)
+                    : null;
+
+                if (!session && userId) {
+                    session = await ChatSession.create({
+                        userId,
+                        title: message.substring(0, 30) + "...",
+                        messages: [],
+                    });
+                }
+            }
+
+            const historyContents = session
+                ? session.messages.map((msg) => ({
+                      role: msg.sender === "user" ? "user" : "model",
+                      parts: [{ text: msg.content }],
+                  }))
+                : [];
+
+            historyContents.push({
+                role: "user",
+                parts: [{ text: message }],
+            });
+
+            const apiKey = process.env.GEMINI_API_KEY;
+            const ai = new GoogleGenAI({ apiKey });
+
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: historyContents,
+                config: {
+                    systemInstruction:
+                        "You are a Tier-3 Cyber Security Incident Response Analyst. Trace vulnerabilities, provide a risk level (Low to Critical), and offer remediated code alternatives inside clean markdown code blocks.",
+                },
+            });
+
+            const aiText =
+                response.text ||
+                "Operational analysis returned an empty execution path.";
+
+            if (session) {
+                session.messages.push(
+                    { sender: "user", content: message, timestamp: new Date() },
+                    { sender: "agent", content: aiText, timestamp: new Date() },
+                );
+                await session.save();
+            }
+
+            socket.emit("receive_message", {
+                sessionId: session ? session._id : null,
+                sender: "agent",
+                content: aiText,
+                timestamp: new Date(),
+            });
+        } catch (err: any) {
+            console.error("[WebSocket Error]:", err);
+            socket.emit("error", {
+                message: "Failed to process security audit request.",
+            });
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log(`[WebSocket] Socket pipeline disconnected: ${socket.id}`);
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`[Server] LogiSec Engine operating securely on port ${PORT}`);
+const PORT = process.env.PORT || 5001;
+httpServer.listen(PORT, () => {
+    console.log(
+        `[Server] Core infrastructure operating securely on port ${PORT}`,
+    );
 });

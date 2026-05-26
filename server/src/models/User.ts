@@ -26,7 +26,6 @@ const UserSchema = new Schema<IUser>({
     },
 });
 
-// Pre-save middleware: Securely hash password on creation/modification
 UserSchema.pre<IUser>("save", async function (next) {
     if (!this.isModified("passwordHash")) return next();
 
@@ -39,7 +38,6 @@ UserSchema.pre<IUser>("save", async function (next) {
     }
 });
 
-// Instance Method: Safely verify a password attempt
 UserSchema.methods.comparePassword = async function (
     password: string,
 ): Promise<boolean> {
