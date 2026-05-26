@@ -1,15 +1,40 @@
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    Navigate,
+} from "react-router-dom";
+import ChatPage from "./pages/ChatPage";
+import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
+
+// Simple guard to protect historical data screens
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    const token = localStorage.getItem("logisec_token");
+    return token ? children : <Navigate to="/login" replace />;
+};
+
 function App() {
     return (
-        <div className="flex min-h-screen items-center justify-center font-mono">
-            <div className="text-center">
-                <h1 className="text-xl font-bold tracking-widest text-emerald-400">
-                    LOGISEC // MAIN WORKSPACE SCAFFOLD
-                </h1>
-                <p className="text-xs text-slate-500 mt-2">
-                    WEBSOCKET ROUTING LAYER VERIFIED IN MEMORY
-                </p>
-            </div>
-        </div>
+        <Router>
+            <Routes>
+                {/* Guest-accessible live chat interface */}
+                <Route path="/" element={<ChatPage />} />
+                <Route path="/login" element={<LoginPage />} />
+
+                {/* Secured dashboard analysis history */}
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </Router>
     );
 }
 
