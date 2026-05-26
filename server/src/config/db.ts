@@ -4,7 +4,6 @@ export const connectDB = async (): Promise<void> => {
     try {
         const uri = process.env.MONGO_URI;
 
-        // Support both local (mongodb://) and Atlas cloud (mongodb+srv://) protocols
         if (
             !uri ||
             (!uri.startsWith("mongodb://") && !uri.startsWith("mongodb+srv://"))
