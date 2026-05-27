@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/axiosInstance";
 
+// Complete Atomic Component Registry
+import { AuthCard } from "../components/auth/AuthCard";
+import { AuthHeader } from "../components/auth/AuthHeader";
+import { AuthMessageBanner } from "../components/auth/AuthMessageBanner";
+import { AuthForm } from "../components/auth/AuthForm";
+import { AuthInputGroup } from "../components/auth/AuthInputGroup";
+import { AuthSubmitButton } from "../components/auth/AuthSumbitButton";
+import { AuthToggleLink } from "../components/auth/AuthToggleLink";
+
 export default function LoginPage() {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState("");
@@ -32,65 +41,38 @@ export default function LoginPage() {
         }
     };
 
+    const toggleAuthMode = () => {
+        setIsSignUp(!isSignUp);
+        setError(""); // Clear error state instantly when switching layouts
+    };
+
     return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 font-mono">
-            <div className="w-full max-w-md rounded border border-slate-800 bg-slate-900 p-8 shadow-2xl">
-                <h2 className="text-center text-xl font-bold tracking-widest text-emerald-400">
-                    LOGISEC // ACCESS
-                </h2>
-                {error && (
-                    <div className="mt-4 border border-rose-800 bg-rose-950/50 p-2 text-xs text-rose-400">
-                        {error}
-                    </div>
-                )}
-                <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                    <div>
-                        <label className="block text-[10px] uppercase text-slate-400 mb-1">
-                            System Mail String
-                        </label>
-                        <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
-                            placeholder="analyst@logisec.io"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] uppercase text-slate-400 mb-1">
-                            Access Key Crypt
-                        </label>
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
-                            placeholder="••••••••"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-500 transition-colors disabled:opacity-40"
-                    >
-                        {loading
-                            ? "PROCESSING..."
-                            : isSignUp
-                              ? "PROVISION CREDENTIALS"
-                              : "AUTHORIZE ACCOUNT"}
-                    </button>
-                </form>
-                <button
-                    onClick={() => setIsSignUp(!isSignUp)}
-                    className="mt-4 w-full text-center text-xs text-slate-500 hover:text-emerald-400 underline"
-                >
-                    {isSignUp
-                        ? "Already cleared? Authorize System"
-                        : "Request dynamic access clearance"}
-                </button>
-            </div>
-        </div>
+        <AuthCard>
+            <AuthHeader />
+
+            <AuthMessageBanner error={error} />
+
+            <AuthForm onSubmit={handleSubmit}>
+                <AuthInputGroup
+                    label="System Mail String"
+                    type="email"
+                    value={email}
+                    placeholder="analyst@logisec.io"
+                    onChange={setEmail}
+                />
+
+                <AuthInputGroup
+                    label="Access Key Crypt"
+                    type="password"
+                    value={password}
+                    placeholder="••••••••"
+                    onChange={setPassword}
+                />
+
+                <AuthSubmitButton loading={loading} isSignUp={isSignUp} />
+            </AuthForm>
+
+            <AuthToggleLink isSignUp={isSignUp} onClick={toggleAuthMode} />
+        </AuthCard>
     );
 }
