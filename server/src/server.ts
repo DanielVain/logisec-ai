@@ -16,13 +16,6 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-if (!process.env.MONGO_URI) {
-    process.env.PORT = "5001";
-    process.env.MONGO_URI =
-        "mongodb+srv://danielvain16_db_user:4dFFUX9lzoCNk9Pi@ai-code-reviewer-capsto.cl92guz.mongodb.net/";
-    process.env.GEMINI_API_KEY = "AIzaSyAo3ajUcJ-SK_8TsWE3bfq_YaW_PUtF17M";
-}
-
 const app = express();
 const httpServer = createServer(app);
 
