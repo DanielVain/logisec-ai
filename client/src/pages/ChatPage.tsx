@@ -58,34 +58,47 @@ export default function ChatPage() {
             },
         );
 
+        // Pipeline Compilation Error
         socket.on("error", (err: { message: string }) => {
-            setLoading(false);
+            setLoading(false); // 🚨 Fix: Instantly kill loading skeletons
             toast.error(
                 err.message || "Vulnerability pipeline compilation failed.",
                 { id: "socket-error" },
             );
         });
 
+        // Gateway Level Disconnect (Server drops out entirely)
         socket.on("disconnect", (reason) => {
-            setLoading(false);
+            setLoading(false); // 🚨 Fix: Kill the loading state so inputs reopen
             if (
                 reason === "io server disconnect" ||
                 reason === "transport close"
             ) {
                 toast.error(
                     "Security gateway connection dropped. Reconnecting...",
-                    { icon: "⚠️" },
+                    {
+                        id: "gateway-drop",
+                        icon: "⚠️",
+                    },
                 );
             }
+        });
+
+        // Catch low-level connection timeout errors
+        socket.on("connect_error", () => {
+            setLoading(false);
+            toast.error("Failed to re-establish secure socket pipeline.", {
+                id: "conn-timeout",
+            });
         });
 
         return () => {
             socket.off("receive_message");
             socket.off("error");
             socket.off("disconnect");
+            socket.off("connect_error");
         };
     }, [socket]);
-
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chatHistory, loading]);
