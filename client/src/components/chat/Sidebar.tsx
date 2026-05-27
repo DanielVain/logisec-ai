@@ -135,14 +135,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             {/* User Status Workspace Block */}
-            <div className="p-3 border-t border-slate-800/30 bg-slate-900/10 flex items-center justify-between min-w-[240px]">
+            <div
+                className={`
+        p-3 border-t border-slate-800/30 bg-slate-900/10 flex items-center justify-between w-64 h-14 shrink-0
+        transition-all duration-300 ease-in-out origin-left
+        ${
+            isSidebarOpen || isMobileMenuOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2 pointer-events-none"
+        }
+      `}
+            >
                 <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700/50">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700/50 shadow-inner">
                         <User className="h-3.5 w-3.5 text-slate-300" />
                     </div>
-                    <div
-                        className={`truncate transition-opacity duration-200 ${!isSidebarOpen && "lg:opacity-0"}`}
-                    >
+
+                    <div className="truncate">
                         <div className="text-xs font-medium text-slate-200 truncate">
                             {isLoggedIn ? "SecOps Analyst" : "Guest Operator"}
                         </div>
@@ -153,13 +162,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     </div>
                 </div>
-                <div
-                    className={`transition-opacity duration-200 ${!isSidebarOpen && "lg:opacity-0 lg:pointer-events-none"}`}
-                >
+
+                <div>
                     {isLoggedIn ? (
                         <button
                             onClick={onLogout}
-                            className="text-slate-400 hover:text-rose-400 transition-colors p-1.5 rounded-md hover:bg-slate-800/30"
+                            className="text-slate-400 hover:text-rose-400 transition-colors p-1.5 rounded-md hover:bg-slate-800/30 cursor-pointer"
                             title="Sign Out"
                         >
                             <LogOut className="h-4 w-4" />
