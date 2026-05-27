@@ -132,3 +132,14 @@ httpServer.listen(PORT, () => {
         `[Server] Core infrastructure operating securely on port ${PORT}`,
     );
 });
+
+if (process.env.NODE_ENV === "production") {
+    // Point to the built static files inside the client folder
+    const clientBuildPath = path.join(__dirname, "client", "dist");
+    app.use(express.static(clientBuildPath));
+
+    // Fallback catch-all: route everything else straight to React's index.html
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(clientBuildPath, "index.html"));
+    });
+}
