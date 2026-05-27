@@ -1,18 +1,90 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ==========================================================================
+   1. GLOBAL ENGINE IMPORTS (Must remain at the absolute top of the file)
+   ========================================================================== */
+@import "tailwindcss";
 
-body {
-    background-color: #020617; /* Slate 950 */
-    color: #e2e8f0; /* Slate 200 */
-    margin: 0;
-    font-family:
-        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+/* ==========================================================================
+   2. TAILWIND V4 MODERN SaaS CONFIGURATION LAYER
+   ========================================================================== */
+@theme {
+    /* 2026 SaaS Shimmer & Smooth Fade Structural Utilities */
+    --animate-shimmer: shimmer 2.5s infinite linear;
+    --animate-fade-in: fadeIn 0.2s ease-out forwards;
+
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 }
 
-/* Custom terminal glass pane styling */
-.terminal-glass {
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(51, 65, 85, 0.5);
+/* ==========================================================================
+   3. GLOBAL APPLICATION BASE STYLES
+   ========================================================================== */
+html,
+body {
+    background-color: #090d16;
+    color: #e2e8f0;
+    font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   4. PREMIUM EMERALD SEC_OPS SCROLLBAR (Cross-Browser Override)
+   ========================================================================== */
+
+/* Chrome, Edge, Safari, and Opera Webkit Engines */
+::-webkit-scrollbar {
+    width: 6px; /* Thin, minimal profile footprint */
+    height: 6px;
+}
+
+/* The structural background tracking strip */
+::-webkit-scrollbar-track {
+    background: #090d16;
+}
+
+/* The active interactive dragging thumb slider */
+::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.2); /* Subdued Emerald-500 tint at rest */
+    border-radius: 100px;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    transition: background 0.2s ease;
+}
+
+/* Brightens into a crisp emerald glow when you hover over it */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.5); /* Glowing active emerald state */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Firefox Core Engine Support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.2) #090d16;
 }
