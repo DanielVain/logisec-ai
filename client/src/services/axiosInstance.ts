@@ -2,7 +2,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const API = axios.create({
-    baseURL: "http://localhost:5001/api",
+    baseURL: import.meta.env.VITE_API_URL,
     timeout: 10000,
 });
 
