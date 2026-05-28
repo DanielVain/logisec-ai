@@ -25,7 +25,7 @@ const io = new Server(httpServer, {
         methods: ["GET", "POST"],
         credentials: true,
     },
-    transports: ["websocket"],
+    transports: ["polling", "websocket"],
     allowEIO3: true,
 });
 

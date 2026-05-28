@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 
 // Clean the environment URL for secure WebSocket connections
 // Grab the URL, ensuring there's no trailing slash that could throw off the proxy
-const SOCKET_URL = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "");
+const SOCKET_URL = import.meta.env.VITE_API_URL as string;
 
 export const SocketContext = createContext<Socket | null>(null);
 
@@ -17,11 +17,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     useEffect(() => {
         const newSocket = io(SOCKET_URL, {
-            transports: ["websocket"],
+            transports: ["polling", "websocket"],
             upgrade: false,
             secure: true,
+            withCredentials: true,
             rejectUnauthorized: false,
             autoConnect: true,
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
         });
 
         setSocket(newSocket);
