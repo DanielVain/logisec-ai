@@ -18,8 +18,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     useEffect(() => {
         const newSocket = io(SOCKET_URL, {
             transports: ["websocket"],
+            upgrade: false,
             secure: true,
-            rejectUnauthorized: false, // Helps prevent strict self-signed certificate rejections on cloud proxies
+            rejectUnauthorized: false,
+            autoConnect: true,
         });
 
         setSocket(newSocket);

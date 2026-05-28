@@ -26,6 +26,7 @@ const io = new Server(httpServer, {
         credentials: true,
     },
     transports: ["websocket"],
+    allowEIO3: true,
 });
 
 app.use(cors());
@@ -121,7 +122,7 @@ io.on("connection", (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 10000;
 httpServer.listen(PORT, () => {
     console.log(
         `[Server] Core infrastructure operating securely on port ${PORT}`,
