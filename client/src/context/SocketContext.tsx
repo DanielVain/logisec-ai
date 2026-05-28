@@ -1,31 +1,48 @@
-import { createContext, useContext } from "react";
-import { Socket } from "socket.io-client";
-import { io } from "socket.io-client";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
-// Grab your live Render backend URL (e.g., https://logisec-backend.onrender.com)
+// Clean the environment URL for secure WebSocket connections
 const SOCKET_URL =
     (import.meta.env.VITE_API_URL as string) || "http://localhost:5000";
+const wsUrl = SOCKET_URL.replace(/^http/, "ws");
 
-// Clean the URL to ensure it plays nice with socket.io expectations
-const pcUrl = SOCKET_URL.replace(/^http/, "ws");
-
-export const socket = io(pcUrl, {
-    // 🚨 CRITICAL FOR RENDER: Force WebSocket transport immediately
-    // instead of polling, which often gets blocked by cloud proxies
-    transports: ["websocket"],
-    secure: true,
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 2000,
-});
-
-// 1. Ensure your context is created
 export const SocketContext = createContext<Socket | null>(null);
 
-// 2. Add and EXPORT the missing useSocket hook 🚨
+interface SocketProviderProps {
+    children: React.ReactNode;
+}
+
+// 🚨 EXPORTED NAMED COMPONENT: Matches your main.tsx import exactly
+export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
+    const [socket, setSocket] = useState<Socket | null>(null);
+
+    useEffect(() => {
+        const newSocket = io(wsUrl, {
+            transports: ["websocket"],
+            secure: true,
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 2000,
+        });
+
+        setSocket(newSocket);
+
+        return () => {
+            newSocket.disconnect();
+        };
+    }, []);
+
+    return (
+        <SocketContext.Provider value={socket}>
+            {children}
+        </SocketContext.Provider>
+    );
+};
+
+// 🚨 EXPORTED NAMED HOOK: Matches your ChatPage.tsx import exactly
 export const useSocket = () => {
     const context = useContext(SocketContext);
-    if (!context) {
+    if (context === undefined) {
         throw new Error("useSocket must be used within a SocketProvider");
     }
     return context;
