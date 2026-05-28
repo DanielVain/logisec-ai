@@ -1,25 +1,18 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
-const SocketContext = createContext<Socket | null>(null);
+// Grab your live Render backend URL (e.g., https://logisec-backend.onrender.com)
+const SOCKET_URL =
+    (import.meta.env.VITE_API_URL as string) || "http://localhost:5000";
 
-export const useSocket = () => useContext(SocketContext);
+// Clean the URL to ensure it plays nice with socket.io expectations
+const pcUrl = SOCKET_URL.replace(/^http/, "ws");
 
-export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-    const [socket, setSocket] = useState<Socket | null>(null);
-
-    useEffect(() => {
-        const newSocket = io("http://localhost:5001");
-        setSocket(newSocket);
-
-        return () => {
-            newSocket.disconnect();
-        };
-    }, []);
-
-    return (
-        <SocketContext.Provider value={socket}>
-            {children}
-        </SocketContext.Provider>
-    );
-};
+export const socket = io(pcUrl, {
+    // 🚨 CRITICAL FOR RENDER: Force WebSocket transport immediately
+    // instead of polling, which often gets blocked by cloud proxies
+    transports: ["websocket"],
+    secure: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 2000,
+});

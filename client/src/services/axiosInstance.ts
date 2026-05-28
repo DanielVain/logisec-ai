@@ -3,8 +3,7 @@ import toast from "react-hot-toast";
 
 // 🚨 DYNAMIC SWITCH: Reads from Render's environment, falls back to local machine
 const API = axios.create({
-    baseURL:
-        (import.meta.env.VITE_API_URL as string) || "http://localhost:5001",
+    baseURL: import.meta.env.VITE_API_URL as string,
     timeout: 10000,
 });
 
