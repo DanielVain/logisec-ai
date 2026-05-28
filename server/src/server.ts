@@ -26,6 +26,7 @@ const io = new Server(httpServer, {
             "https://logisec-client.onrender.com",
         ],
         methods: ["GET", "POST"],
+        credentials: true,
     },
 });
 
