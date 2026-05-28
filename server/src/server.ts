@@ -21,13 +21,11 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
     cors: {
-        origin: [
-            "http://localhost:5173",
-            "https://logisec-client.onrender.com",
-        ],
+        origin: ["http://localhost:5173", /\.onrender\.com$/],
         methods: ["GET", "POST"],
         credentials: true,
     },
+    transports: ["websocket"],
 });
 
 app.use(cors());

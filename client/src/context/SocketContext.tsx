@@ -2,9 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 // Clean the environment URL for secure WebSocket connections
-const SOCKET_URL =
-    (import.meta.env.VITE_API_URL as string) || "http://localhost:5000";
-const wsUrl = SOCKET_URL.replace(/^http/, "ws");
+// Grab the URL, ensuring there's no trailing slash that could throw off the proxy
+const SOCKET_URL = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "");
 
 export const SocketContext = createContext<Socket | null>(null);
 
@@ -17,12 +16,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        const newSocket = io(wsUrl, {
+        const newSocket = io(SOCKET_URL, {
             transports: ["websocket"],
             secure: true,
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 2000,
+            rejectUnauthorized: false, // Helps prevent strict self-signed certificate rejections on cloud proxies
         });
 
         setSocket(newSocket);
